@@ -1,2 +1,2 @@
-# Imersao_Beckend
-Curso Imersao BeckEnd Alura
+# Imersao_Backend
+Curso Imersao BackEnd Alura
