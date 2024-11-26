@@ -1,15 +1,21 @@
 import express from "express";
 import multer from "multer";
 import cors from "cors";
+import path from "path";
 import { listarPosts, postarNovoPost, uploadImagem, atualizarNovoPost } from "../controllers/postsController.js";
+
+// Configurações de CORS com origens permitidas
+const allowedOrigins = [
+    "https://imersao-frontend-six.vercel.app",
+    "https://imersao-frontend-git-main-gabriel-ferrazs-projects-8cfbdacd.vercel.app",
+];
 
 const corsOptions = {
     origin: (origin, callback) => {
-        // Permite qualquer domínio HTTPS ou requisições sem origem (Postman/local)
-        if (origin?.startsWith("https://") || !origin) {
+        if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            callback(new Error("CORS blocked this origin"));
+            callback(new Error(`CORS blocked for origin: ${origin}`));
         }
     },
     optionsSuccessStatus: 200,
@@ -25,13 +31,17 @@ const storage = multer.diskStorage({
     },
 });
 
-// Cria uma instância do Multer com o destino e configuração de armazenamento definidos
 const upload = multer({ dest: "./uploads", storage });
 
 // Define as rotas do aplicativo
 const routes = (app) => {
     app.use(express.json());
     app.use(cors(corsOptions));
+
+    // Configura o servidor estático para acessar arquivos da pasta "uploads"
+    app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
+    // Define as rotas da API
     app.get("/posts", listarPosts);
     app.post("/posts", postarNovoPost);
     app.post("/upload", upload.single("imagem"), uploadImagem);

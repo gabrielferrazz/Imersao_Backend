@@ -9,12 +9,15 @@ export async function listarPosts(req, res) {
 
         // Atualiza os URLs das imagens com a BASE_URL
         const baseUrl = process.env.BASE_URL;
-        const updatedPosts = posts.map(post => {
-            return {
-                ...post,
-                imagemUrl: `${baseUrl}/${post._id}.png`
-            };
-        });
+        if (!baseUrl) {
+            console.error("BASE_URL não está definida no .env!");
+            return res.status(500).json({ erro: "Configuração de BASE_URL ausente." });
+        }
+
+        const updatedPosts = posts.map(post => ({
+            ...post,
+            imagemUrl: `${baseUrl}/${post._id}.png`
+        }));
 
         res.status(200).json(updatedPosts); // Retorna os posts atualizados
     } catch (error) {
