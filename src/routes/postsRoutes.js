@@ -7,7 +7,7 @@ import cors from "cors";
 const allowedOrigins = [
     "https://imersao-frontend-six.vercel.app",
     "https://imersao-frontend-git-main-gabriel-ferrazs-projects-8cfbdacd.vercel.app",
-    "imersao-frontend-7k55f1qgn-gabriel-ferrazs-projects-8cfbdacd.vercel.app"
+    "https://imersao-frontend-7k55f1qgn-gabriel-ferrazs-projects-8cfbdacd.vercel.app"
 ];
 
 // Configuração dinâmica do CORS
