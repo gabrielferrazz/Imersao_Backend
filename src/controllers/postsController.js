@@ -2,79 +2,87 @@ import { getTodosPosts, criarPost, atualizarPost } from "../models/postsModel.js
 import fs from "fs";
 import gerarDescricaoComGemini from "../services/geminiService.js";
 
-// Obtém a URL base do ambiente (produção ou local)
-const baseURL = process.env.BASE_URL || "http://localhost:3000"; 
-
+// Função para listar todos os posts
 export async function listarPosts(req, res) {
     try {
-        const posts = await getTodosPosts(); // Obtém os posts do banco de dados usando a função definida
+        const posts = await getTodosPosts(); // Obtém os posts do banco de dados
 
-        // Atualiza os posts para incluir a URL completa da imagem
-        const updatedPosts = posts.map(post => ({
-            ...post,
-            imagemUrl: `${baseURL}/uploads/${post.imagemUrl}`,
-        }));
+        // Atualiza os URLs das imagens com a BASE_URL
+        const baseUrl = process.env.BASE_URL;
+        const updatedPosts = posts.map(post => {
+            return {
+                ...post,
+                imagemUrl: `${baseUrl}/${post._id}.png`
+            };
+        });
 
-        res.status(200).json(updatedPosts); // Responde à requisição com os dados atualizados
+        res.status(200).json(updatedPosts); // Retorna os posts atualizados
     } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ "Erro": "Falha ao listar posts" });
+        console.error("Erro ao listar posts:", error.message);
+        res.status(500).json({ erro: "Erro ao listar posts" });
     }
 }
 
+// Função para criar um novo post
 export async function postarNovoPost(req, res) {
-    const novoPost = req.body; // Obtém os dados do novo post enviados no corpo da requisição
+    const novoPost = req.body;
     try {
-        const postCriado = await criarPost(novoPost); // Cria um novo post no banco de dados
-        res.status(200).json(postCriado); // Retorna o post criado com sucesso
+        const postCriado = await criarPost(novoPost);
+        res.status(200).json(postCriado);
     } catch (error) {
-        console.error(error.message); // Exibe o erro no console em caso de falha
-        res.status(500).json({ "Erro": "Falha ao criar novo post" });
+        console.error("Erro ao criar post:", error.message);
+        res.status(500).json({ erro: "Erro ao criar post" });
     }
 }
 
+// Função para fazer upload de uma imagem e criar um post
 export async function uploadImagem(req, res) {
     const novoPost = {
-        descricao: "", // Inicializa a descrição como uma string vazia
-        imagemUrl: req.file.originalname, // Define o nome original do arquivo como URL da imagem
-        alt: "" // Inicializa o texto alternativo como uma string vazia
+        descricao: "",
+        imagemUrl: "",
+        alt: ""
     };
+
     try {
-        const postCriado = await criarPost(novoPost); // Cria o novo post no banco de dados
-        const imagemAtualizada = `uploads/${postCriado.insertedId}.png`; // Define o novo caminho para o arquivo usando o ID do post criado
-        fs.renameSync(req.file.path, imagemAtualizada); // Renomeia/move o arquivo para o novo caminho especificado
+        const postCriado = await criarPost(novoPost);
+        const imagemAtualizada = `uploads/${postCriado.insertedId}.png`;
+        fs.renameSync(req.file.path, imagemAtualizada); // Move o arquivo para o destino correto
 
-        // Atualiza a URL da imagem com o domínio correto
-        postCriado.imagemUrl = `${baseURL}/${imagemAtualizada}`;
+        // Atualiza o post com a URL correta da imagem
+        const baseUrl = process.env.BASE_URL;
+        const updatedPost = {
+            imagemUrl: `${baseUrl}/${postCriado.insertedId}.png`
+        };
 
-        res.status(200).json(postCriado); // Retorna o post criado com a URL atualizada
+        await atualizarPost(postCriado.insertedId, updatedPost);
+
+        res.status(200).json({ ...postCriado, ...updatedPost });
     } catch (error) {
-        console.error(error.message); // Exibe o erro no console em caso de falha
-        res.status(500).json({ "Erro": "Falha ao fazer upload da imagem" });
+        console.error("Erro ao fazer upload de imagem:", error.message);
+        res.status(500).json({ erro: "Erro ao fazer upload de imagem" });
     }
 }
 
+// Função para atualizar um post
 export async function atualizarNovoPost(req, res) {
     const id = req.params.id;
 
-    // Gera a URL completa para a imagem
-    const urlImagem = `${baseURL}/uploads/${id}.png`;
-
     try {
         const imageBuffer = fs.readFileSync(`uploads/${id}.png`);
-        const descricao = await gerarDescricaoComGemini(imageBuffer); // Gera uma descrição para a imagem
+        const descricao = await gerarDescricaoComGemini(imageBuffer);
 
-        const post = {
-            imagemUrl: urlImagem,
+        const baseUrl = process.env.BASE_URL;
+        const updatedPost = {
+            imagemUrl: `${baseUrl}/${id}.png`,
             descricao: descricao,
-            alt: req.body.alt // Obtém o texto alternativo enviado no corpo da requisição
+            alt: req.body.alt || ""
         };
 
-        const postCriado = await atualizarPost(id, post);
+        const postAtualizado = await atualizarPost(id, updatedPost);
 
-        res.status(200).json(postCriado); // Retorna o post atualizado com sucesso
+        res.status(200).json(postAtualizado);
     } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ "Erro": "Falha ao atualizar o post" });
+        console.error("Erro ao atualizar post:", error.message);
+        res.status(500).json({ erro: "Erro ao atualizar post" });
     }
 }
