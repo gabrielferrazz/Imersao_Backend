@@ -4,7 +4,7 @@ import { listarPosts, postarNovoPost, uploadImagem, atualizarNovoPost } from "..
 import cors from "cors";
 
 const corsOptions = {
-    origin: "http://localhost:8000",
+    origin: "*",
     optionsSuccessStatus: 200
 }
 // Configuração de armazenamento para o Multer
