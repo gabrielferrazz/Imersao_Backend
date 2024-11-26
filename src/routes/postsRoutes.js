@@ -4,7 +4,7 @@ import { listarPosts, postarNovoPost, uploadImagem, atualizarNovoPost } from "..
 import cors from "cors";
 
 const corsOptions = {
-    origin: "https://imersao-frontend-mipy0ur6m-gabriel-ferrazs-projects-8cfbdacd.vercel.app",
+    origin: "imersao-frontend-git-main-gabriel-ferrazs-projects-8cfbdacd.vercel.app",
     optionsSuccessStatus: 200
 }
 // Configuração de armazenamento para o Multer
